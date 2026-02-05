@@ -18,7 +18,7 @@ Game Rules (text-based)
 - Exact roll is required to reach square 100.
 - First player to reach square 100 wins.
 - Server shows a scoreboard after each game.
-- Board snapshot is shown every 5 turns.
+- Board snapshot is shown after every 3 full rounds (3 turns per player).
 
 Deployment Mode
 - Multi-machine capable using TCP sockets (IPv4). (Works locally on 127.0.0.1)
