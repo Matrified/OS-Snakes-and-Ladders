@@ -225,7 +225,6 @@ static void send_line(int sock, const char *msg);
 static void reset_game_locked(void) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         game->position[i] = 0;
-        game->ready[i] = 0;
     }
     game->current_turn = 0;
     game->game_over = 0;
@@ -342,19 +341,6 @@ static void *scheduler_thread(void *arg) {
             sleep(1);
             continue;
         }
-        int all_ready = 1;
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            if (game->connected[i] && !game->ready[i]) {
-                all_ready = 0;
-                break;
-            }
-        }
-        if (!all_ready) {
-            pthread_mutex_unlock(&game->state_mutex);
-            sleep(1);
-            continue;
-        }
-
         if (game->round_no != last_round) {
             last_round = game->round_no;
             last_turn = -1;
@@ -490,10 +476,6 @@ static void handle_client(int sock, int id) {
         if (!game->game_over) {
             game_over_notice = 0;
         }
-        if (!game->ready[id]) {
-            pthread_mutex_unlock(&game->state_mutex);
-            continue;
-        }
 
         if (game->game_over) {
             int winner = game->winner_id;
@@ -560,6 +542,7 @@ static void handle_client(int sock, int id) {
             pthread_mutex_lock(&game->state_mutex);
             game->connected[id] = 0;
             game->active_players--;
+            game->ready[id] = 0;
             pthread_mutex_unlock(&game->state_mutex);
             enqueue_log("Player %d (%s) disconnected (recv=%d errno=%d)",
                         id + 1, game->player_name[id], n, errno);
