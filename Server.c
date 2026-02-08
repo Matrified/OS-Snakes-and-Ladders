@@ -481,6 +481,15 @@ static void handle_client(int sock, int id) {
             game_started_notice = 1;
         }
 
+        if (my_turns == 0 || ((my_turns + 1) % game->board_show_every == 0)) {
+            pthread_mutex_lock(&game->state_mutex);
+            build_board_locked(board_local, sizeof(board_local));
+            pthread_mutex_unlock(&game->state_mutex);
+            send_line(sock, "\n----- Board -----\n");
+            send_line(sock, board_local);
+            send_line(sock, "-----------------\n");
+        }
+
         send_line(sock, "YOUR_TURN: press ENTER to roll the dice.\n");
         n = recv_line(sock, buffer, sizeof(buffer));
         if (n <= 0) {
@@ -737,11 +746,3 @@ int main(void) {
 
     return 0;
 }
-        if (my_turns == 0 || ((my_turns + 1) % game->board_show_every == 0)) {
-            pthread_mutex_lock(&game->state_mutex);
-            build_board_locked(board_local, sizeof(board_local));
-            pthread_mutex_unlock(&game->state_mutex);
-            send_line(sock, "\n----- Board -----\n");
-            send_line(sock, board_local);
-            send_line(sock, "-----------------\n");
-        }
