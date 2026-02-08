@@ -608,8 +608,9 @@ static void handle_client(int sock, int id) {
         build_positions_locked(pos_line, sizeof(pos_line));
         pthread_mutex_unlock(&game->state_mutex);
         if (pos_line[0]) {
-            snprintf(buffer, sizeof(buffer), "Positions: %s\n", pos_line);
-            send_line(sock, buffer);
+            send_line(sock, "Positions: ");
+            send_line(sock, pos_line);
+            send_line(sock, "\n");
         }
 
         pthread_mutex_lock(&game->state_mutex);
