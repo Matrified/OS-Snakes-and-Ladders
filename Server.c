@@ -73,6 +73,7 @@ typedef struct {
     int target_players;
     int active_players;
     char player_name[MAX_PLAYERS][MAX_NAME];
+    int ready[MAX_PLAYERS];
 
     ScoreEntry scores[SCORE_MAX];
     int score_count;
@@ -224,6 +225,7 @@ static void send_line(int sock, const char *msg);
 static void reset_game_locked(void) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         game->position[i] = 0;
+        game->ready[i] = 0;
     }
     game->current_turn = 0;
     game->game_over = 0;
@@ -340,6 +342,18 @@ static void *scheduler_thread(void *arg) {
             sleep(1);
             continue;
         }
+        int all_ready = 1;
+        for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (game->connected[i] && !game->ready[i]) {
+                all_ready = 0;
+                break;
+            }
+        }
+        if (!all_ready) {
+            pthread_mutex_unlock(&game->state_mutex);
+            sleep(1);
+            continue;
+        }
 
         if (game->round_no != last_round) {
             last_round = game->round_no;
@@ -444,6 +458,7 @@ static void handle_client(int sock, int id) {
     pthread_mutex_lock(&game->state_mutex);
     strncpy(game->player_name[id], buffer, MAX_NAME - 1);
     game->player_name[id][MAX_NAME - 1] = '\0';
+    game->ready[id] = 1;
     pthread_mutex_unlock(&game->state_mutex);
 
     snprintf(buffer, sizeof(buffer), "Welcome %s! Waiting for the game to start...\n", game->player_name[id]);
@@ -474,6 +489,10 @@ static void handle_client(int sock, int id) {
         }
         if (!game->game_over) {
             game_over_notice = 0;
+        }
+        if (!game->ready[id]) {
+            pthread_mutex_unlock(&game->state_mutex);
+            continue;
         }
 
         if (game->game_over) {
@@ -766,6 +785,7 @@ int main(void) {
         pthread_mutex_lock(&game->state_mutex);
         game->connected[i] = 1;
         game->active_players++;
+        game->ready[i] = 0;
         int active_now = game->active_players;
         pthread_mutex_unlock(&game->state_mutex);
         printf("Player %d connected (%d/%d)\n", i + 1, active_now, target_players);
@@ -798,7 +818,7 @@ int main(void) {
         pthread_mutex_lock(&game->state_mutex);
         name_ready = 1;
         for (int i = 0; i < target_players; i++) {
-            if (!game->connected[i] || game->player_name[i][0] == '\0') {
+            if (!game->connected[i] || !game->ready[i]) {
                 name_ready = 0;
                 break;
             }
