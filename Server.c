@@ -805,7 +805,7 @@ int main(void) {
         }
         pthread_mutex_unlock(&game->state_mutex);
         if (!name_ready) {
-            usleep(200000); /* 0.2s */
+            sleep(1);
         }
     }
 
