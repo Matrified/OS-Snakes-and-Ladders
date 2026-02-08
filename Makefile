@@ -1,8 +1,3 @@
-# COMMENT – INDIVIDUAL CONTRIBUTIONS
-# Hadi:
-# - Build automation using Makefile
-# - Compilation flags and clean targets
-
 
 CC=gcc
 CFLAGS=-Wall -Wextra -std=c11 -pthread
