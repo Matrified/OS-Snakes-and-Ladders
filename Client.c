@@ -80,9 +80,10 @@ int main(void) {
         printf("%s\n", buffer);
 
         /* Only respond on your turn. */
-        if (strncmp(buffer, "YOUR_TURN", 9) == 0) {
-            printf("Press ENTER to roll...\n");
-            fgets(buffer, sizeof(buffer), stdin);
+        if (strcmp(buffer, "YOUR_TURN") == 0) {
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF) {
+            }
             send(sock, "roll\n", 5, 0);
         }
     }

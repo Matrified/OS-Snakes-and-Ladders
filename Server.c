@@ -536,7 +536,8 @@ static void handle_client(int sock, int id) {
             send_line(sock, "---------------------------\n");
         }
 
-        send_line(sock, "YOUR_TURN: press ENTER to roll the dice.\n");
+        send_line(sock, "YOUR_TURN\n");
+        send_line(sock, "Press ENTER to roll the dice.\n");
         n = recv_line(sock, buffer, sizeof(buffer));
         if (n <= 0) {
             pthread_mutex_lock(&game->state_mutex);
